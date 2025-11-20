@@ -1,27 +1,47 @@
-import random
 import requests
 import time
+import os
 
+# Postavke
+BASE_URL = 'https://placehold.co'
+OUTPUT_DIR = './placeholders'
+START_WIDTH = 400
+HEIGHT = 400
+INCREMENT = 50
+NUM_IMAGES = 11  # 1 početna + 10 sljedećih
 
-BASE_PHOTO_URL = 'https://robohash.org'
+# Kreiraj mapu ako ne postoji
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-def get_random_photo() -> str:
-    robo_hash_id = random.randint(1,5000)
-    PHOTO_URL = f'{BASE_PHOTO_URL}/{robo_hash_id}'
+def get_placeholder(index):
+    # Izračun nove širine: 400, 450, 500...
+    current_width = START_WIDTH + (index * INCREMENT)
+    
+    # Konstrukcija URL-a za webp format (npr. https://placehold.co/450x400.webp)
+    url = f'{BASE_URL}/{current_width}x{HEIGHT}.webp'
+    filename = f'placeholder_{current_width}x{HEIGHT}.webp'
+    filepath = os.path.join(OUTPUT_DIR, filename)
+
     try:
-        response = requests.get(PHOTO_URL)
-        # response = requests.get(URL)
+        print(f'Dohvaćam sliku: {url}')
+        response = requests.get(url)
         response.raise_for_status()
 
-        # content je binary -> odnosno file i koristi se za dohvat slika ili drugih datoteka
-        with open(f'./RohoHashs/RoboHash-{robo_hash_id}.png', 'wb') as photo:
+        # Spremanje datoteke
+        with open(filepath, 'wb') as photo:
             photo.write(response.content)
-            return f'Datoteka "RoboHash-{robo_hash_id}.png" je uspjesno kreirana!'
+            print(f'Datoteka "{filename}" je uspješno kreirana!')
 
     except Exception as ex:
-        print(f'Dogodila se greska: {ex}')
+        print(f'Dogodila se greška za {filename}: {ex}')
 
-
-for i in range(10):
-    get_random_photo()
-    time.sleep(2)
+# Glavna petlja
+if __name__ == '__main__':
+    print(f"Počinjem preuzimanje {NUM_IMAGES} slika u '{OUTPUT_DIR}'...")
+    
+    for i in range(NUM_IMAGES):
+        get_placeholder(i)
+        # Kratka pauza da budemo pristojni prema serveru (kao u vašem primjeru)
+        time.sleep(1)
+        
+    print("Završeno!")
